@@ -21,13 +21,14 @@ class HMMNode
 {
 public:
 	HMMNode();
-	HMMNode(int aState, char aResidue, HiddenMarkovModel* aModel);
+	HMMNode(int anId, int aState, char aResidue, HiddenMarkovModel* aModel);
 	~HMMNode();
 
 	void addInTransition(HMMTransition* aTranstion);
 	void addOutTransition(HMMTransition* aTranstion);
 	double logEmissionProbability();
 
+	int id;
 	int state;
 	char residue;
 	vector<HMMTransition*> inTransitions;

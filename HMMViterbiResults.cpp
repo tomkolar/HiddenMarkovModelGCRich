@@ -5,8 +5,21 @@
 HMMViterbiResults::HMMViterbiResults() {
 }
 
-HMMViterbiResults::HMMViterbiResults(int numberOfStates) {
+HMMViterbiResults::HMMViterbiResults(int anIteration, int numberOfStates) {
+
+	iteration = anIteration;
 	numStates = numberOfStates;
+
+	// initialize counts vectors
+	for (int i = 0; i < numStates; i++) {
+		stateCounts.push_back(0);
+		segmentCounts.push_back(0);
+		transitionCounts.push_back(vector<int>());
+		for (int j = 0; j < numStates; j++) {
+			transitionCounts[i].push_back(0);
+		}
+		segments[i] = vector<pair<int,int>>();
+	}
 }
 
 
@@ -16,9 +29,19 @@ HMMViterbiResults::~HMMViterbiResults(){
 string HMMViterbiResults::resultsWithoutSegments() {
 	stringstream ss;
 
-	ss << stateHistogramResultsString()
-	   << segmentHistogramResultsString()
-	   << probabilitiesResultsString();
+	// Header
+	ss << "    <result type=\"viterbi_iteration\" iteration=\"" << iteration << "\">\n";
+
+	// Results
+	ss 
+		<< stateHistogramResultsString()
+		<< segmentHistogramResultsString()
+		<< probabilitiesResultsString();
+
+	ss 	<< transitionCountsResultsString();
+
+	// Footer
+	ss << "    </result>\n";
 
 	return ss.str();
 }
@@ -26,11 +49,40 @@ string HMMViterbiResults::resultsWithoutSegments() {
 string HMMViterbiResults::allResults() {
 	stringstream ss;
 
-	ss << resultsWithoutSegments()
-	   << segmentResultsString();
+	// Results
+	ss 
+		<< resultsWithoutSegments()
+		<< segmentResultsString();
 
 	return ss.str();
 }
+
+void HMMViterbiResults::calculateProbabilities(HMMProbabilities* previousProbs) {
+	probabilities = new HMMProbabilities();
+
+	// Use initation and emission from previous probabilites
+	// initiation probabilties
+	probabilities->setInitiationProbability(0, previousProbs->initiationProbability(0));
+	probabilities->setInitiationProbability(1, previousProbs->initiationProbability(1));
+
+	// emission probabilities
+	probabilities->setEmissionProbability(0, 'A', previousProbs->emissionProbability(0, 'A'));
+	probabilities->setEmissionProbability(0, 'T', previousProbs->emissionProbability(0, 'T'));
+	probabilities->setEmissionProbability(0, 'C', previousProbs->emissionProbability(0, 'C'));
+	probabilities->setEmissionProbability(0, 'G', previousProbs->emissionProbability(0, 'G'));
+	probabilities->setEmissionProbability(1, 'A', previousProbs->emissionProbability(1, 'A'));
+	probabilities->setEmissionProbability(1, 'T', previousProbs->emissionProbability(1, 'T'));
+	probabilities->setEmissionProbability(1, 'C', previousProbs->emissionProbability(1, 'C'));
+	probabilities->setEmissionProbability(1, 'G', previousProbs->emissionProbability(1, 'G'));
+
+	// transition probabilites
+	// Set from result counts
+	probabilities->setTransitionProbability(0, 0, transitionCounts[0][0]/ (double) stateCounts[0]);
+	probabilities->setTransitionProbability(0, 1, transitionCounts[0][1]/ (double) stateCounts[0]);
+	probabilities->setTransitionProbability(1, 0, transitionCounts[1][0]/ (double) stateCounts[1]);
+	probabilities->setTransitionProbability(1, 1, transitionCounts[1][1]/ (double) stateCounts[1]);
+}
+
 
 string HMMViterbiResults::stateHistogramResultsString() {
 	stringstream ss;
@@ -81,7 +133,7 @@ string HMMViterbiResults::probabilitiesResultsString() {
 		ss << emissionProbablitiesResultsString(i);
 	
 	// End Model
-	ss << "      </model>";
+	ss << "      </model>\n";
 
 	return ss.str();
 }
@@ -90,15 +142,25 @@ string HMMViterbiResults::segmentResultsString() {
 	stringstream ss;
 
 	vector<pair<int, int>>& gcSegments = segments[1];
+	
+	int counter = 0;
+	for (int i = gcSegments.size() - 1; i >= 0; i--) {
+		pair<int, int>& segment = gcSegments[i];
+		ss 
+			<< "("
+			<< segment.first
+			<< ","
+			<< segment.second
+			<< ")";
+		if (i > 0)
+			ss << ",";
 
-	vector<pair<int, int>>::reverse_iterator rit = gcSegments.rbegin();
-
-	for (rit = gcSegments.rbegin(); rit!= gcSegments.rend(); ++rit) {
-		ss << rit->second << ",";	
+		if (counter % 5)
+			ss << "\n";
+		counter++;
 	}
 
 	return StringUtilities::xmlResult("segment_list", ss.str());
-
 }
 
 string HMMViterbiResults::statesResultsString() {
@@ -116,7 +178,7 @@ string HMMViterbiResults::statesResultsString() {
 	}
 
 	// Footer
-	ss << "        </states>\n";
+	ss << "</states>\n";
 
 	return ss.str();
 }
@@ -139,7 +201,7 @@ string HMMViterbiResults::intitiationProbabiltiesResultsString() {
 	}
 
 	// Footer
-	ss << "        </initial_state_probabilities>\n";
+	ss << "</initial_state_probabilities>\n";
 
 	return ss.str();
 }
@@ -148,7 +210,7 @@ string HMMViterbiResults::transitionProbablitiesResultsString(int state) {
 	stringstream ss;
 
 	// Header 
-	ss << "        <transition_probabilities state=\"" << state + 1 << "\>";
+	ss << "        <transition_probabilities state=\"" << state + 1 << "\">";
 
 	// States
 	for (int i = 0; i < numStates; i++) {
@@ -162,7 +224,7 @@ string HMMViterbiResults::transitionProbablitiesResultsString(int state) {
 	}
 
 	// Footer
-	ss << "        </transition_probabilities>\n";
+	ss << "</transition_probabilities>\n";
 
 	return ss.str();
 }
@@ -171,7 +233,7 @@ string HMMViterbiResults::emissionProbablitiesResultsString(int state) {
 	stringstream ss;
 
 	// Header 
-	ss << "        <emission_probabilities state=\"" << state + 1 << "\>";
+	ss << "        <emission_probabilities state=\"" << state + 1 << "\">";
 
 	// Residues
 	ss 
@@ -181,7 +243,32 @@ string HMMViterbiResults::emissionProbablitiesResultsString(int state) {
 		<< "T=" << probabilities->emissionProbability(state, 'T');
 
 	// Footer
-	ss << "        </emission_probabilities>\n";
+	ss << "</emission_probabilities>\n";
+
+	return ss.str();
+}
+
+string HMMViterbiResults::transitionCountsResultsString() {
+	stringstream ss;
+
+	// Header 
+	ss << "        <transition_counts>";
+
+	// States
+	for (int i = 0; i < numStates; i++) {
+		for (int j = 0; j < numStates; j++) {
+			ss
+				<< i + 1 << j + 1
+				<< "="
+				<< transitionCounts[i][j];
+
+			if ( i < numStates - 1 || j < numStates - 1)
+			   ss << ",";
+		}
+	}
+
+	// Footer
+	ss << "</transition_counts>\n";
 
 	return ss.str();
 }

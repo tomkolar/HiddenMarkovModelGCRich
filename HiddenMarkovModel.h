@@ -42,7 +42,7 @@ private:
 	void buildAndCalculateModel();
 	void createTransitionsFor(HMMPosition* currentPosition, HMMPosition* previousPosition);
 	void calculateHighestWeightPath(HMMPosition* currentPosition);
-	HMMViterbiResults* gatherViterbiResults();
+	HMMViterbiResults* gatherViterbiResults(int iteration);
 };
 
 #endif // HIDDENMARKOVMODEL_H

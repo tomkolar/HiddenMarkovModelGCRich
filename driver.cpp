@@ -19,22 +19,22 @@ using namespace std;
 
 int main( int argc, char *argv[] ) {
 
-/*	// Check that file name was  entered as argument
-	if (argc < 4) {
+	// Check that file name and iterations were entered as arguments
+	if (argc < 3) {
 		cout << "Invalid # of arguments\n";
-		cout << "usage: align fastaFile1 fastaFile2 fastaFile3\n";
+		cout << "usage: hmm fastaFile iterations\n";
 		return -1;
 	}
 
 	cout << "Starting\n";
 
-	// Get Fasta File names
-	string fastaFileName1 = argv[1];
-	string fastaFileName2 = argv[2];
-	string fastaFileName3 = argv[3];
-*/
+	// Get Parameters
+	string fastaFileName = argv[1];
+	int iterations = atoi(argv[2]);
+
 	// Set Fasta File names
-	string fastaFileName = "c:/Users/kolart/Documents/Genome540/Assignment5/testfile1.fna";
+//	string fastaFileName = "c:/Users/kolart/Documents/Genome540/Assignment5/testfile1.fna";
+//	int iterations = 2;
 
 	// Create the fasta file object
 	FastaFile* fastaFile = new FastaFile(fastaFileName);
@@ -43,10 +43,9 @@ int main( int argc, char *argv[] ) {
 
 	// Create the Hidden Markov Model
 	HiddenMarkovModel hmm(fastaFile);
-	hmm.viterbiTraining(1);
-	cout << hmm.allScoresResultsString();
-	cout << hmm.pathStatesResultsString();
+	hmm.viterbiTraining(iterations);
+//	cout << hmm.allScoresResultsString();
+//	cout << hmm.pathStatesResultsString() << "\n";
 	cout << hmm.viterbiResultsString();
-	hmm.allScoresResultsString();
 
 }

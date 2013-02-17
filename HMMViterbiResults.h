@@ -13,34 +13,39 @@
 #include "HMMProbabilities.h"
 #include <map>
 #include <vector>
+#include <string>
 using namespace std;
 
 class HMMViterbiResults
 {
 public:
 	HMMViterbiResults();
-	HMMViterbiResults(int numberOfStates);
+	HMMViterbiResults(int iteration, int numberOfStates);
 	~HMMViterbiResults();
 
+	int iteration;
 	int numStates;
 	vector<int> stateCounts;
 	vector<int> segmentCounts;
 	HMMProbabilities* probabilities;
 	map<int,vector<pair<int,int>>> segments;
+	vector<vector<int>> transitionCounts;
 
 	string resultsWithoutSegments();
 	string allResults();
+	void calculateProbabilities(HMMProbabilities* previousProbs);
+
+private:
+
 	string stateHistogramResultsString();
 	string segmentHistogramResultsString();
 	string probabilitiesResultsString();
 	string segmentResultsString();
-
-private:
-
 	string statesResultsString();
 	string intitiationProbabiltiesResultsString();
 	string transitionProbablitiesResultsString(int state);
 	string emissionProbablitiesResultsString(int state);
+	string transitionCountsResultsString();
 
 };
 

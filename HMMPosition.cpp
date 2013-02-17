@@ -1,4 +1,5 @@
 #include "HMMPosition.h"
+#include <stddef.h>
 
 
 HMMPosition::HMMPosition() {
@@ -11,7 +12,7 @@ HMMPosition::HMMPosition() {
 HMMPosition::HMMPosition(int anId, char residue, int numStates, HiddenMarkovModel* model) {
 	id = anId;
 	for (int state = 0; state < numStates; state++) {
-		HMMNode* node = new HMMNode(state, residue, model);
+		HMMNode* node = new HMMNode(anId, state, residue, model);
 		nodes.push_back(node);
 	}
 }

@@ -2,6 +2,9 @@
 #include "HMMTransition.h"
 #include "HMMProbabilities.h"
 #include <sstream>
+#include <cmath>
+#include <cfloat>
+#include <iostream>
 
 const int HiddenMarkovModel::numStates = 2;
 
@@ -11,7 +14,7 @@ HiddenMarkovModel::HiddenMarkovModel() {
 HiddenMarkovModel::HiddenMarkovModel(FastaFile* aFastaFile) {
 	fastaFile = aFastaFile;
 	modelBuilt = false;
-	probabilities = HMMProbabilities::testProbabilities();
+	probabilities = HMMProbabilities::initialProbabilities();
 }
 
 HiddenMarkovModel::~HiddenMarkovModel(void)
@@ -25,7 +28,7 @@ void HiddenMarkovModel::viterbiTraining(int numIterations) {
 		buildAndCalculateModel();
 
 		// Gather the viterbi reuslts
-		HMMViterbiResults* aViterbiResults = gatherViterbiResults();
+		HMMViterbiResults* aViterbiResults = gatherViterbiResults(iteration);
 		viterbiResults.push_back(aViterbiResults);
 
 		// Reset the probabilities to the viterbi calculated ones for the next
@@ -94,8 +97,9 @@ void HiddenMarkovModel::createTransitionsFor(HMMPosition* currentPosition, HMMPo
 void HiddenMarkovModel::calculateHighestWeightPath(HMMPosition* aPosition) {
 	// Calculate hwp for each node
 	for (HMMNode* positionNode : aPosition->nodes) {
-		// initialize highest weight to negative infinity
-		positionNode->highestWeight = -DBL_MAX;
+		// initialize highest weight to negative infinity (except start node)
+		if (positionNode->id != 0)
+			positionNode->highestWeight = -DBL_MAX;
 
 		// Iterater through each of the incoming transitions to find
 		// the highest score
@@ -113,6 +117,59 @@ void HiddenMarkovModel::calculateHighestWeightPath(HMMPosition* aPosition) {
 			}
 		}
 	}
+}
+
+HMMViterbiResults* HiddenMarkovModel::gatherViterbiResults(int iteration) {
+	HMMViterbiResults* results = new HMMViterbiResults(iteration, numStates);
+
+	// Find the end of the highest scoring path
+	HMMPosition* lastPosition = model.back();
+	HMMNode* aNode = lastPosition->highestScoringNode();
+
+	// Walk the path backward and gather the data
+	int previousState = -1; 
+	pair<int, int> currentSegment = pair<int,int>(-1,-1);
+	while (aNode->residue != HMMNode::startNodeChar) {
+		int currentState = aNode->state;
+		
+		// Update number of occurrences for a state
+		results->stateCounts[currentState]++;
+
+		// Update segment info
+		if (currentState != previousState) {
+			// Set the start of the segment
+			currentSegment.first = aNode->id + 1;
+
+			// Add segment to segments map (except for first time through)
+			if (currentSegment.second != -1) 
+				results->segments[previousState].push_back(currentSegment);
+
+			// Create new segment
+			currentSegment = pair<int,int>(aNode->id, aNode->id);
+
+			// Update number of segments for a state
+			results->segmentCounts[currentState]++;
+		}
+
+		// Update transition counts
+		if (previousState >= 0) {
+			results->transitionCounts[currentState][previousState]++;
+		}
+
+		// Set up variables for next iteration
+		previousState = currentState;
+		aNode = aNode->highestWeightPreviousNode;
+	}
+
+	// Add the last segment to the collection
+	currentSegment.first =  1;
+	results->segments[previousState].push_back(currentSegment);
+
+	// Calculate the probabilities
+	results->calculateProbabilities(probabilities);
+
+	// Return the results
+	return results;
 }
 
 string HiddenMarkovModel::allScoresResultsString() {

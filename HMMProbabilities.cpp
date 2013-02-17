@@ -1,5 +1,5 @@
 #include "HMMProbabilities.h"
-
+#include <cmath>
 
 HMMProbabilities::HMMProbabilities() {
 }

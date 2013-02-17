@@ -7,13 +7,15 @@ const char HMMNode::startNodeChar = '&';
 
 HMMNode::HMMNode(){
 	// Initialize as start node
-	state = 0;
+	id = 0;
+	state = -1;
 	residue = startNodeChar;
 	highestWeight = 0; // set to zero only on start node
 	highestWeightPreviousNode = NULL;
 }
 
-HMMNode::HMMNode(int aState, char aResidue, HiddenMarkovModel* aModel) {
+HMMNode::HMMNode(int anId, int aState, char aResidue, HiddenMarkovModel* aModel) {
+	id = anId;
 	state = aState;
 	residue = aResidue;
 	model = aModel;
