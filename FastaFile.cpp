@@ -45,13 +45,13 @@ FastaFile::FastaFile() {
 FastaFile::FastaFile(string name) {
 	dna = true;
 	parseFileName(name);
-    populate();
+	populate();
 }
 
 FastaFile::FastaFile(string name, bool dnaBool) {
 	dna = dnaBool;
 	parseFileName(name);
-    populate();
+	populate();
 }
 
 
@@ -136,7 +136,7 @@ const int FastaFile::getSequenceLength() {
 }
 
 string& FastaFile::getFileName() {
-    return fileName;
+	return fileName;
 }
 
 string& FastaFile::getSequence() {
@@ -178,7 +178,7 @@ void FastaFile::parseFileName(string& aFileName) {
 //		reverseComplement - populated with reverse complement of sequence
 void FastaFile::populate() {
 
-    ifstream inputFile(filePath + "/" + fileName);
+	ifstream inputFile(filePath + "/" + fileName);
 	stringstream ss;
 	string line;
 
@@ -205,14 +205,14 @@ void FastaFile::populate() {
 //  Postconditions:
 //		reverseComplement - populated with reverse complement of sequence
 void FastaFile::createReverseComplement() {
-    stringstream ss;
+	stringstream ss;
 
-    // Append the complements in order
-    for (string::size_type i = 0; i < sequence.length(); i++) {
-            ss << complement(sequence[i]);
-    }
+	// Append the complements in order
+	for (string::size_type i = 0; i < sequence.length(); i++) {
+			ss << complement(sequence[i]);
+	}
 
-    // Reverse the string and set it to the reverseComplement attribute
+	// Reverse the string and set it to the reverseComplement attribute
 	string complement = ss.str();
 	reverseComplement = string(complement.rbegin(), complement.rend());
 }
@@ -220,19 +220,19 @@ void FastaFile::createReverseComplement() {
 // char complement(char aChar)
 //  Purpose:  returns the dna complement of aChar
 char FastaFile::complement(char aChar) {
-    if (aChar == 'A')
-        return 'T';
+	if (aChar == 'A')
+		return 'T';
 
-    if (aChar == 'T')
-        return 'A';
+	if (aChar == 'T')
+		return 'A';
 
-    if (aChar == 'G')
-        return 'C';
+	if (aChar == 'G')
+		return 'C';
 
-    if (aChar == 'C')
-        return 'G';
+	if (aChar == 'C')
+		return 'G';
 
-    return aChar;
+	return aChar;
 }
 
 // countBases(int counts[])

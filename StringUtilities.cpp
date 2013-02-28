@@ -35,12 +35,12 @@ StringUtilities::~StringUtilities() {
 //  Postconditions:
 //		elems array will be populated with tokens from string
 vector<string>& StringUtilities::split(const string& s, char delim, vector<string>& elems) {
-    stringstream ss(s);
-    string item;
-    while(getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
+	stringstream ss(s);
+	string item;
+	while(getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+	return elems;
 }
 
 // string xmlResult(const string& type, const string& value)
